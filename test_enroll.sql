@@ -4,13 +4,14 @@
 DECLARE
     -- Declarations: variables used by the block
     v_cur    SYS_REFCURSOR;                     -- cursor to receive the result set
-    v_dept   prerequisites.dept_code := 'CS';   -- testing input: department
-    v_course prerequisites.course#   := 532;    -- testing input: course number
+    v_dept   prerequisites.dept_code%TYPE := 'CS';   -- testing input: department
+    v_course prerequisites.course#%TYPE   := 532;    -- testing input: course number
 
     -- Local helper: runs the procedure, prints rows, handles errors
-    PROCEDURE show_prereqs (p_dept IN classes.dept_code%TYPE, p_course IN classes.course#%TYPE) IS
+    PROCEDURE show_prereqs (p_dept IN classes.dept_code%TYPE, 
+                            p_course IN classes.course#%TYPE) IS
         l_cur SYS_REFCURSOR;
-        l_val VARCHAR2(20);
+        l_val VARCHAR2(30);
         l_rows PLS_INTEGER := 0;
     BEGIN
         DBMS_OUTPUT.PUT_LINE('--- Prerequisites for '
