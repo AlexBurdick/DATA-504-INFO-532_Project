@@ -3,7 +3,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
     ------------------------------------------------------------------
     -- 2. Show tuples for every table
     ------------------------------------------------------------------
-        -- Show every row in students
+    -- Show every row in students
     PROCEDURE show_students IS
     BEGIN
         FOR s IN (SELECT * FROM students) LOOP
