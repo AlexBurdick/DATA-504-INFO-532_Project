@@ -1,3 +1,42 @@
+# Logs and output
+*.log
+*.lst
+*.out
+*.trc
+
+# SQL*Plus spool files
+*.txt
+
+# Oracle SQL Developer
+system*/
+
+# VS Code
+.vscode/
+
+# JetBrains IDEs
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Credentials and config
+.env
+.env.*
+database.properties
+db.properties
+config.properties
+
+# Oracle wallet files (if used)
+*.sso
+*.p12
+*.jks
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
 # Compiled class file
 *.class
 
