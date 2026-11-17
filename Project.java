@@ -5,7 +5,7 @@ import java.io.*;
 import java.awt.*;
 import oracle.jdbc.pool.OracleDataSource;
 
-public class project {
+public class Project {
    public static void main (String args []) throws SQLException {
       
       // Variable declarations
