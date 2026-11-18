@@ -3,157 +3,99 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
     ------------------------------------------------------------------
     -- 2. Show tuples for every table
     ------------------------------------------------------------------
-    -- Show every row in students
-    PROCEDURE show_students IS
+    
+    --Return ref cursor of students for display
+    FUNCTION get_students RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        FOR s IN (SELECT * FROM students) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                s.B# || ' ' || s.first_name || ' ' ||
-                s.last_name || ' ' || s.st_level || ' ' ||
-                s.gpa || ' ' || s.email || ' ' || s.bdate
-            );
-        END LOOP;
-    END show_students;
+        OPEN rc FOR SELECT * FROM students;
+        RETURN rc;
+    END get_students;
 
-    -- Show every row in courses
-    PROCEDURE show_courses IS
+    --Return ref cursor of courses for display
+    FUNCTION get_courses RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        FOR c IN (SELECT * FROM courses) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                c.dept_code || ' ' || c.course# || ' ' || c.title
-            );
-        END LOOP;
-    END show_courses;
+        OPEN rc FOR SELECT * FROM courses;
+        RETURN rc;
+    END get_courses;
 
-    -- Show every row in course_credit
-    PROCEDURE show_course_credit IS
+    --Return ref cursor of course_credit for display
+    FUNCTION get_course_credit RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        FOR c IN (SELECT * FROM course_credit) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                c.course# || ' ' || c.credits
-            );
-        END LOOP;
-    END show_course_credit;
+        OPEN rc FOR SELECT * FROM course_credit;
+        RETURN rc;
+    END get_course_credit;
 
-    -- Show every row in classes
-    PROCEDURE show_classes IS
+    --Return ref cursor of classes for display
+    FUNCTION get_classes RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        FOR c IN (SELECT * FROM classes) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                c.classid || ' ' || c.dept_code || ' ' ||
-                c.course# || ' ' || c.sect# || ' ' ||
-                c.year || ' ' || c.semester || ' ' ||
-                c."LIMIT" || ' ' || c.class_size || ' ' ||
-                c.room
-            );
-        END LOOP;
-    END show_classes;
+        OPEN rc FOR SELECT * FROM classes;
+        RETURN rc;
+    END get_classes;
 
-    -- Show every row in g_enrollments
-    PROCEDURE show_g_enrollments IS
+    --Return ref cursor of g_enrollments for display
+    FUNCTION get_g_enrollments RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        FOR e IN (SELECT * FROM g_enrollments) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                e.g_B# || ' ' || e.classid || ' ' || e.score
-            );
-        END LOOP;
-    END show_g_enrollments;
+        OPEN rc FOR SELECT * FROM g_enrollments;
+        RETURN rc;
+    END get_g_enrollments;
 
-    -- Show every row in score_grade
-    PROCEDURE show_score_grade IS
+    --Return ref cursor of score_grade for display
+    FUNCTION get_score_grade RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        FOR s IN (SELECT * FROM score_grade) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                s.score || ' ' || s.lgrade
-            );
-        END LOOP;
-    END show_score_grade;
+        OPEN rc FOR SELECT * FROM score_grade;
+        RETURN rc;
+    END get_score_grade;
 
-    -- Show every row in prerequisites
-    PROCEDURE show_prerequisites IS
+    --Return ref cursor of prerequisites for display
+    FUNCTION get_prerequisites RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        FOR p IN (SELECT * FROM prerequisites) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                p.dept_code || ' ' || p.course# || ' ' ||
-                p.pre_dept_code || ' ' || p.pre_course#
-            );
-        END LOOP;
-    END show_prerequisites;
+        OPEN rc FOR SELECT * FROM prerequisites;
+        RETURN rc;
+    END get_prerequisites;
 
-    -- Show every row in logs
-    PROCEDURE show_logs IS
+    --Return ref cursor of logs for display
+    FUNCTION get_logs RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        FOR l IN (SELECT * FROM logs) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                l.log# || ' ' || l.user_name || ' ' ||
-                l.op_time || ' ' || l.table_name || ' ' ||
-                l.operation || ' ' || l.tuple_keyvalue
-            );
-        END LOOP;
-    END show_logs;
+        OPEN rc FOR SELECT * FROM logs;
+        RETURN rc;
+    END get_logs;
 
-    -- Dump every table in dependency order
-    PROCEDURE show_all IS
+    -- Show all table names in DB
+    FUNCTION get_table_names RETURN SYS_REFCURSOR AS
+        rc SYS_REFCURSOR;
     BEGIN
-        DBMS_OUTPUT.PUT_LINE('=== students ===');
-        show_students;
-
-        DBMS_OUTPUT.PUT_LINE('=== courses ===');
-        show_courses;
-
-        DBMS_OUTPUT.PUT_LINE('=== course_credit ===');
-        show_course_credit;
-
-        DBMS_OUTPUT.PUT_LINE('=== classes ===');
-        show_classes;
-
-        DBMS_OUTPUT.PUT_LINE('=== g_enrollments ===');
-        show_g_enrollments;
-
-        DBMS_OUTPUT.PUT_LINE('=== score_grade ===');
-        show_score_grade;
-
-        DBMS_OUTPUT.PUT_LINE('=== prerequisites ===');
-        show_prerequisites;
-
-        DBMS_OUTPUT.PUT_LINE('=== logs ===');
-        show_logs;
-    END show_all;
+        OPEN rc FOR
+            SELECT table_name
+            FROM user_tables
+            ORDER BY table_name;
+        RETURN rc;
+    END get_table_names;
 
     ------------------------------------------------------------------
     -- 3. Show all students in a class
     ------------------------------------------------------------------
-    PROCEDURE show_class_students (
+    --Return ref cursor of students enrolled in a given class
+    FUNCTION get_class_students (
         p_classid IN VARCHAR2   -- classes.classid is CHAR(5)
-    ) AS
-        class_count NUMBER;
+    ) RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
-        --check if classid exists in classes table
-        SELECT COUNT(*) INTO class_count
-        FROM classes
-        WHERE classid = p_classid;
-
-        IF class_count = 0 THEN
-            RAISE_APPLICATION_ERROR(-20031,
-                'The classid is invalid.');
-        END IF;
-
-        --print a header so the output is self-describing
-        DBMS_OUTPUT.PUT_LINE('Students in ' || p_classid || ':');
-
-        --list every student enrolled in the class
-        FOR s IN (
-            SELECT students.B#, students.first_name, students.last_name
-            FROM students
-            JOIN g_enrollments
-                ON students.B# = g_enrollments.g_B#
-            WHERE g_enrollments.classid = p_classid
-        ) LOOP
-            DBMS_OUTPUT.PUT_LINE(
-                s.B# || ' ' || s.first_name || ' ' || s.last_name
-            );
-        END LOOP;
-    END show_class_students;
+        OPEN rc FOR
+            SELECT s.B#, s.first_name, s.last_name
+            FROM students s
+            JOIN g_enrollments e
+                ON s.B# = e.g_B#
+            WHERE e.classid = p_classid;
+        RETURN rc;
+    END get_class_students;
 
     ------------------------------------------------------------------
     -- 4. Get a class's prerequisites

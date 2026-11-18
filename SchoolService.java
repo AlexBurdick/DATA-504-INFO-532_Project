@@ -1,8 +1,9 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.sql.*;
-import oracle.jdbc.*;
-import sql.SqlQueries;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import oracle.jdbc.OracleTypes;
 
 public class SchoolService {
 
@@ -15,173 +16,109 @@ public class SchoolService {
     }
 
     // -----------------------------------------
-    // Private methods
-    // -----------------------------------------
-
-    private static boolean printResultSet(ResultSet rs)
-            throws SQLException {
-
-        ResultSetMetaData meta = rs.getMetaData();
-        int columnCount = meta.getColumnCount();
-        boolean foundRows = false;
-
-        while (rs.next()) {
-
-            foundRows = true;
-
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(rs.getString(i));
-                if (i < columnCount) System.out.print("\t");
-            }
-
-            System.out.println();
-        }
-
-        return foundRows;
-    }
-
-    private static boolean printResultSet (ResultSet rs, String header)
-            throws SQLException {
-
-        ResultSetMetaData meta = rs.getMetaData();
-        int columnCount = meta.getColumnCount();
-        boolean foundRows = false;
-
-        while (rs.next()) {
-
-            if (!foundRows && header != null)  System.out.println(header);
-
-            foundRows = true;
-
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(rs.getObject(i));
-                if (i < columnCount)  System.out.print("\t");
-            }
-
-            System.out.println();
-        }
-
-        return foundRows;
-    }
-    
-    private static void printResultSetWithHeaders(ResultSet rs)
-            throws SQLException {
-
-        ResultSetMetaData meta = rs.getMetaData();
-        int columnCount = meta.getColumnCount();
-
-        // Print column headers
-        for (int i = 1; i <= columnCount; i++) {
-            System.out.print(meta.getColumnName(i));
-            if (i < columnCount) System.out.print("\t");
-        }
-
-        System.out.println();
-
-        // Print rows
-        while (rs.next()) {
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(rs.getString(i));
-                if (i < columnCount)  System.out.print("\t");
-            }
-
-            System.out.println();
-        }
-    }
-    
-    private static ResultSet callSQLQuery(Connection conn, String query) 
-            throws SQLException {
-
-        CallableStatement cs = conn.prepareCall(query);
-
-        cs.registeredOutParameter(1, OracleTypes.CURSOR);
-
-        cs.execute();
-
-        cs.close();
-
-        return (ResultSet) cs.getObject(1);
-    }
-    
-    // -----------------------------------------
     // Public methods
     // -----------------------------------------
 
-    public void showStudents()
-            throws SQLException {
+    public void showStudents() throws SQLException {
 
-        String query = "begin ? := school_pkg.show_students(); end;";
+        String query = "begin school_pkg.show_students; end;";
 
-        ResultSet rs = callSQLQuery(conn, query);
-
-        printResultSetWithHeaders(rs);
-
-        rs.close();
+        try (CallableStatement cs = conn.prepareCall(query)) {
+            cs.execute();
+        }
     }
 
-    public void showStudentsInClass(String classId)
-            throws SQLException {
+    public void showStudents() throws SQLException {
+        
+        String query = "begin ? := school_pkg.get_students; end;";
+        
+        try (CallableStatement cs = conn.prepareCall(query)) {
+            cs.registerOutParameter(1, OracleTypes.CURSOR);
+            cs.execute();
+            
+            try (ResultSet rs = (ResultSet) cs.getObject(1)) {
+                // same print loop as getCoursePrerequisites
+            }
+        }
+    }
 
-        String query = "begin ? := school_pkg.show_class_students(?); end;";
+    public void showStudentsInClass(String classId) throws SQLException {
 
-        ResultSet rs = callSQLQuery(conn, query);
+        String query = "begin school_pkg.show_class_students(?); end;";
 
-        boolean hasStudents = printResultSet(
-            rs,
-            "\n--- STUDENTS IN CLASS " + classId + " ---"
-        );
-
-        // Print message if no students found
-        if (!hasStudents) System.out.println("No students found.");
-
-        rs.close();
+        try (CallableStatement cs = conn.prepareCall(query)) {
+            cs.setString(1, classId);
+            cs.execute();
+        }
     }
 
     public void getCoursePrerequisites(String dept, int courseNum)
             throws SQLException {
-        
-        String query = "begin ? := school_pkg.show_class_students(?); end;";
-        
-        ResultSet rs = callSQLQuery(conn, query);
-        
-        boolean hasPrerequisites = printResultSet(
-            rs,
-            "\n--- PREREQUISITES FOR " + dept + " " + courseNum + " ---"
-        );
 
-        if (!hasPrerequisites) System.out.println("No prerequisites found.");
+        String query = "begin school_pkg.get_all_prerequisites(?, ?, ?); end;";
 
-        rs.close();
+        try (CallableStatement cs = conn.prepareCall(query)) {
+            cs.setString(1, dept);
+            cs.setInt(2, courseNum);
+            cs.registerOutParameter(3, OracleTypes.CURSOR);
+            cs.execute();
+
+            try (ResultSet rs = (ResultSet) cs.getObject(3)) {
+
+                System.out.println("\n--- PREREQUISITES FOR "
+                                   + dept + " " + courseNum + " ---");
+
+                ResultSetMetaData meta = rs.getMetaData();
+                int columnCount = meta.getColumnCount();
+                boolean foundRows = false;
+
+                while (rs.next()) {
+                    foundRows = true;
+                    for (int i = 1; i <= columnCount; i++) {
+                        System.out.print(rs.getString(i));
+                        if (i < columnCount) System.out.print("\t");
+                    }
+                    System.out.println();
+                }
+
+                if (!foundRows) System.out.println("No prerequisites found.");
+            }
+        }
     }
 
     public void enrollGraduate(String bNum, String classId)
             throws SQLException {
-        
+
+        // enroll_graduate is a void procedure: two IN parameters, no OUT.
         String query = "begin school_pkg.enroll_graduate(?, ?); end;";
 
-        ResultSet rs = callSQLQuery(conn, query);
-
-        rs.close();
+        try (CallableStatement cs = conn.prepareCall(query)) {
+            cs.setString(1, bNum);
+            cs.setString(2, classId);
+            cs.execute();
+        }
     }
 
     public void dropGraduate(String bNum, String classId)
             throws SQLException {
-        
-        String query = "begin school_pkg.drop_graduate(?, ?); end;";
-        
-        ResultSet rs = callSQLQuery(conn, query);
 
-        rs.close();
+        String query = "begin school_pkg.drop_graduate(?, ?); end;";
+
+        try (CallableStatement cs = conn.prepareCall(query)) {
+            cs.setString(1, bNum);
+            cs.setString(2, classId);
+            cs.execute();
+        }
     }
 
-    public void deleteStudent(String bNum)
-            throws SQLException {
+    public void deleteStudent(String bNum) throws SQLException {
 
         String query = "begin school_pkg.delete_student(?); end;";
 
-        ResultSet rs = callSQLQuery(conn, query);
-
-        rs.close();
+        try (CallableStatement cs = conn.prepareCall(query)) {
+            cs.setString(1, bNum);
+            cs.execute();
+        }
     }
 
     public void close() throws SQLException {
@@ -189,5 +126,5 @@ public class SchoolService {
             conn.close();
         }
     }
-    
+
 } // End class
