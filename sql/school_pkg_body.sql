@@ -124,7 +124,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
     -- 3. Show all students in a class
     ------------------------------------------------------------------
     PROCEDURE show_class_students (
-        p_classid IN CHAR(5)   -- classes.classid is CHAR(5)
+        p_classid IN VARCHAR2   -- classes.classid is CHAR(5)
     ) AS
         class_count NUMBER;
     BEGIN
@@ -170,7 +170,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
         WHERE dept_code = p_dept_code AND course# = p_course;
 
         IF v_count = 0 THEN
-            RAISE_APPLICATION_ERROR(-20001, 
+            RAISE_APPLICATION_ERROR(-20001,
                 p_dept_code || p_course || ' does not exist.');
         END IF;
 
@@ -194,8 +194,8 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
     -- 5. Enroll a graduate student into a class
     ------------------------------------------------------------------
     PROCEDURE enroll_graduate (
-        p_B#      IN CHAR,
-        p_classid IN CHAR
+        p_B#      IN VARCHAR2,  -- students.B# is CHAR(9)
+        p_classid IN VARCHAR2   -- classes.classid is CHAR(5)
     ) AS
         v_st_level   VARCHAR2(10);     -- students.st_level
         v_dept_code  VARCHAR2(4);      -- classes.dept_code
@@ -336,7 +336,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
         END;
 
         -- All checks passed: insert. The AFTER INSERT trigger
-        -- (trg_enroll_inc_class_size) bumps classes.class_size.
+        -- (trg_g_enroll_insert) bumps classes.class_size.
         INSERT INTO g_enrollments (g_B#, classid, score)
         VALUES (p_B#, p_classid, NULL);
 
@@ -347,8 +347,8 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
     -- 6. Drop a graduate student from a class
     ------------------------------------------------------------------
     PROCEDURE drop_graduate (
-        p_B#      IN CHAR(9),
-        p_classid IN CHAR(5)
+        p_B#      IN VARCHAR2,  -- students.B# is CHAR(9)
+        p_classid IN VARCHAR2   -- classes.classid is CHAR(5)
     ) IS
         -- Local variables for checking
         v_count       NUMBER;
@@ -424,7 +424,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
         WHERE classid = p_classid;
 
         IF v_semester != v_cur_semester OR v_year != v_cur_year THEN
-            RAISE_APPLICATION_ERROR(-20025, 
+            RAISE_APPLICATION_ERROR(-20025,
                 'Only enrollment in the current semester can be dropped.');
         END IF;
 
@@ -438,7 +438,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
             AND c.year     = v_cur_year;
 
         IF v_class_count = 1 THEN
-            RAISE_APPLICATION_ERROR(-20026, 
+            RAISE_APPLICATION_ERROR(-20026,
                 'This is the only class for this student in the current semester and cannot be dropped.');
         END IF;
 
@@ -447,16 +447,16 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
         DELETE FROM g_enrollments
         WHERE g_B# = p_B#
             AND classid = p_classid;
-            
+
         DBMS_OUTPUT.PUT_LINE('Student successfully dropped from class.');
 
-    END drop_student;
+    END drop_graduate;
 
     ------------------------------------------------------------------
     -- 7. Delete a student (cascades to enrollments via trg_student_delete)
     ------------------------------------------------------------------
     PROCEDURE delete_student (
-        p_B# IN CHAR(9)
+        p_B# IN VARCHAR2   -- students.B# is CHAR(9)
     ) AS
         v_count NUMBER;
     BEGIN
@@ -466,7 +466,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
         WHERE B# = p_B#;
 
         IF v_count = 0 THEN
-            RAISE_APPLICATION_ERROR(-20041, 
+            RAISE_APPLICATION_ERROR(-20041,
                 'The B# is invalid.');
         END IF;
 
@@ -479,3 +479,4 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
 
 END school_pkg;
 /
+SHOW ERRORS;

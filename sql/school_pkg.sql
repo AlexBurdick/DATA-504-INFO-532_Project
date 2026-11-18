@@ -14,7 +14,7 @@ CREATE OR REPLACE PACKAGE school_pkg AS
 
     -- Show all students in a class
     PROCEDURE show_class_students (
-        p_classid IN CHAR(5)
+        p_classid IN VARCHAR2   -- classes.classid is CHAR(5)
     );
 
     -- Show all prerequisites of a class
@@ -26,20 +26,21 @@ CREATE OR REPLACE PACKAGE school_pkg AS
 
     -- Enroll a grad student in a class
     PROCEDURE enroll_graduate (
-        p_B#      IN CHAR,
-        p_classid IN CHAR
+        p_B#      IN VARCHAR2,  -- students.B# is CHAR(9)
+        p_classid IN VARCHAR2   -- classes.classid is CHAR(5)
     );
-    
+
     -- Drop a graduate student from a class
     PROCEDURE drop_graduate (
-        p_B#      IN CHAR(9),
-        p_classid IN CHAR(5)
+        p_B#      IN VARCHAR2,  -- students.B# is CHAR(9)
+        p_classid IN VARCHAR2   -- classes.classid is CHAR(5)
     );
 
     -- Delete a student and all of their enrollments
     PROCEDURE delete_student (
-        p_B#      IN CHAR(9)
+        p_B#      IN VARCHAR2   -- students.B# is CHAR(9)
     );
 
 END school_pkg;
 /
+SHOW ERRORS;

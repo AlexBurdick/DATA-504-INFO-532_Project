@@ -11,8 +11,4 @@ WHENEVER SQLERROR CONTINUE
 @@school_pkg_body.sql
 @@trg_add_drop.sql
 
-SPOOL results.txt
-@@test_enroll.sql
-SPOOL OFF
-
 PROMPT All objects loaded.
