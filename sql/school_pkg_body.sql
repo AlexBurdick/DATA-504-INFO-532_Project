@@ -3,74 +3,73 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
     ------------------------------------------------------------------
     -- 2. Show tuples for every table
     ------------------------------------------------------------------
-    
+
     --Return ref cursor of students for display
-    FUNCTION get_students RETURN ref_cursor AS
+    FUNCTION show_students RETURN ref_cursor AS
         rc ref_cursor;
     BEGIN
         OPEN rc FOR SELECT * FROM students;
         RETURN rc;
-    END get_students;
+    END show_students;
 
     --Return ref cursor of courses for display
-    FUNCTION get_courses RETURN ref_cursor AS
+    FUNCTION show_courses RETURN ref_cursor AS
         rc ref_cursor;
     BEGIN
         OPEN rc FOR SELECT * FROM courses;
         RETURN rc;
-    END get_courses;
+    END show_courses;
 
     --Return ref cursor of course_credit for display
-    FUNCTION get_course_credit RETURN ref_cursor AS
+    FUNCTION show_course_credit RETURN ref_cursor AS
         rc ref_cursor;
     BEGIN
         OPEN rc FOR SELECT * FROM course_credit;
         RETURN rc;
-    END get_course_credit;
+    END show_course_credit;
 
     --Return ref cursor of classes for display
-    FUNCTION get_classes RETURN ref_cursor AS
+    FUNCTION show_classes RETURN ref_cursor AS
         rc ref_cursor;
     BEGIN
         OPEN rc FOR SELECT * FROM classes;
         RETURN rc;
-    END get_classes;
+    END show_classes;
 
     --Return ref cursor of g_enrollments for display
-    FUNCTION get_g_enrollments RETURN ref_cursor AS
+    FUNCTION show_g_enrollments RETURN ref_cursor AS
         rc ref_cursor;
     BEGIN
         OPEN rc FOR SELECT * FROM g_enrollments;
         RETURN rc;
-    END get_g_enrollments;
+    END show_g_enrollments;
 
     --Return ref cursor of score_grade for display
-    FUNCTION get_score_grade RETURN ref_cursor AS
+    FUNCTION show_score_grade RETURN ref_cursor AS
         rc ref_cursor;
     BEGIN
         OPEN rc FOR SELECT * FROM score_grade;
         RETURN rc;
-    END get_score_grade;
+    END show_score_grade;
 
     --Return ref cursor of prerequisites for display
-    FUNCTION get_prerequisites RETURN ref_cursor AS
+    FUNCTION show_prerequisites RETURN ref_cursor AS
         rc ref_cursor;
     BEGIN
         OPEN rc FOR SELECT * FROM prerequisites;
         RETURN rc;
-    END get_prerequisites;
+    END show_prerequisites;
 
     --Return ref cursor of logs for display
-    FUNCTION get_logs RETURN ref_cursor AS
+    FUNCTION show_logs RETURN ref_cursor AS
         rc ref_cursor;
     BEGIN
         OPEN rc FOR SELECT * FROM logs;
         RETURN rc;
-    END get_logs;
+    END show_logs;
 
-    -- Show all table names in DB
-    FUNCTION get_table_names RETURN SYS_REFCURSOR AS
-        rc SYS_REFCURSOR;
+    FUNCTION get_table_names RETURN ref_cursor AS
+        rc ref_cursor;
     BEGIN
         OPEN rc FOR
             SELECT table_name
@@ -83,7 +82,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
     -- 3. Show all students in a class
     ------------------------------------------------------------------
     --Return ref cursor of students enrolled in a given class
-    FUNCTION get_class_students (
+    FUNCTION show_class_students (
         p_classid IN VARCHAR2   -- classes.classid is CHAR(5)
     ) RETURN ref_cursor AS
         rc ref_cursor;
@@ -95,7 +94,7 @@ CREATE OR REPLACE PACKAGE BODY school_pkg AS
                 ON s.B# = e.g_B#
             WHERE e.classid = p_classid;
         RETURN rc;
-    END get_class_students;
+    END show_class_students;
 
     ------------------------------------------------------------------
     -- 4. Get a class's prerequisites
