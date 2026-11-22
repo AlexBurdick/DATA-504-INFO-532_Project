@@ -6,14 +6,14 @@ import java.awt.*;
 import oracle.jdbc.pool.OracleDataSource;
 
 public class Project {
-   public static void main (String args []) throws SQLException {
+   public static void main (String args []) throws SQLException, IOException {
 
       // Variable declarations
       String bnum;
       String classid;
       String dept;
       int courseNum;
-      int choice;
+      int choice = 0; // initialize choice to 0 to enter the loop
 
       // Keyboard input setup from mydemo1 and mydemo2
       BufferedReader readKeyBoard = new BufferedReader(
