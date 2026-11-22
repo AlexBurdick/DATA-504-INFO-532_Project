@@ -1,9 +1,11 @@
 CREATE OR REPLACE PACKAGE school_pkg AS
 
-    --Procedures to show every tuple for every table
-    --Package spec declares the eight show_* procedures plus a show_all wrapper
-    --All 8 Table Display Functions (task 2)
-    --Return ref cursor of students for display
+    --Type used by the show_* functions below
+    TYPE ref_cursor IS REF CURSOR;
+
+    -- Procedures to show every tuple for every table
+    -- Package spec declares the eight show_* procedures
+    -- All 8 Table Display Functions (task 2)
     FUNCTION show_students RETURN ref_cursor;
 
     --Return ref cursor of courses for display

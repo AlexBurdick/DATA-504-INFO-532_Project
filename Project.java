@@ -7,21 +7,21 @@ import oracle.jdbc.pool.OracleDataSource;
 
 public class Project {
    public static void main (String args []) throws SQLException {
-      
+
       // Variable declarations
       String bnum;
       String classid;
       String dept;
       int courseNum;
       int choice;
-      
+
       // Keyboard input setup from mydemo1 and mydemo2
       BufferedReader readKeyBoard = new BufferedReader(
          new InputStreamReader(System.in)
       );
-      
+
       // -----------------------------------------
-      // ESTABLISH CONNECTION WIHT ORACLE DB
+      // ESTABLISH CONNECTION WITH ORACLE DB
       // -----------------------------------------
       Connection conn = null;
 
@@ -38,7 +38,7 @@ public class Project {
 
             conn = ds.getConnection(username, password);
             System.out.println("Connected successfully.\n");
-            
+
          } catch (SQLException e) {
             System.out.println("Login failed: " + e.getMessage());
             System.out.println("Please try again.\n");
@@ -49,74 +49,66 @@ public class Project {
       SchoolService school = new SchoolService(conn);
 
       // CLI MENU
-      // Java do-while loop and switch-case control flow for menu interaction (https://docs.oracle.com/javase/tutorial/java/nutsandbolts/while.html)
-      do
-      {
-         // Printing a Java console menu structure
-         printMenu();
+      do {
+         printMenu();                                                   // Printing a Java console menu structure
 
          String inputStr = readKeyBoard.readLine();                     // Get user input
          if (inputStr == null || inputStr.trim().isEmpty())  continue;  // Check if the user's input is null
-         choice = Integer.parseInt(inputStr.trim());                    // Convert validated input into integer
+         
+         try {
+            choice = Integer.parseInt(inputStr.trim());
+         } catch (NumberFormatException e) {
+            System.out.println("Invalid input: please enter a number 1-7.");
+            continue;  // re-show the menu
+         }
 
-         try
-         {
-            switch (choice)
-            {
+         try { // switch-case control flow for menu interaction
+            switch (choice) {
                case 1:
                   school.showStudents();
                   break;
-
                case 2:
                   classid = prompt(readKeyBoard, "Enter Class ID: ");
                   school.showStudentsInClass(classid);
                   break;
-
                case 3:
                   dept = prompt(readKeyBoard, "Enter Department: ");
                   courseNum = Integer.parseInt(prompt(readKeyBoard, "Enter Course Number: "));
                   school.getCoursePrerequisites(dept, courseNum);
                   break;
-
                case 4:
-                  // Stored procedure execution syntax from mydemo2
                   bnum = prompt(readKeyBoard, "Enter Student B#: ");
                   classid = prompt(readKeyBoard, "Enter Class ID: ");
                   school.enrollGraduate(bnum, classid);
                   break;
-
                case 5: // Drop graduate student
                   bnum = prompt(readKeyBoard, "Enter Student B#: ");
                   classid = prompt(readKeyBoard, "Enter Class ID to drop: ");
                   school.dropGraduate(bnum, classid);
                   break;
-
                case 6: // Delete student
                   bnum = prompt(readKeyBoard, "Enter Student B# to delete: ");
                   school.deleteStudent(bnum);
                   break;
-
                case 7:
                   System.out.println("Exiting application. Goodbye!");
                   break;
-
                default:
                   System.out.println("Invalid choice. Please select a number between 1 and 7.");
             }
          }
          // Exceptions inside the loop so it continues even if something is entered in wrong
-         catch (SQLException ex) { 
+         catch (SQLException ex) {
             System.out.println("\n*** SQLException caught ***\n" + ex.getMessage());
          }
-         catch (Exception e) { 
+         catch (Exception e) {
             System.out.println("\n*** other Exception caught ***\n" + e.getMessage());
          }
 
       } while (choice != 7); // Closes the do-while loop
 
-      // Close after the user picks option 7
-      conn.close();
-      System.out.println("Database connection closed.");
+      // Close via SchoolService (encapsulated; prints the message once)
+      school.close();
 
    } // End main
 
@@ -124,7 +116,7 @@ public class Project {
    // -----------------------------------------
    // HELPER FUNCTIONS
    // -----------------------------------------
-   
+
    private static String prompt(
          BufferedReader in,
          String message) throws IOException {

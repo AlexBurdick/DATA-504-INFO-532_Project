@@ -16,39 +16,111 @@ public class SchoolService {
     }
 
     // -----------------------------------------
-    // Public methods
+    // Private helpers
     // -----------------------------------------
 
-    public void showStudents() throws SQLException {
+    // Print any ResultSet, however many columns it has, with a header row.
+    // Returns true if at least one row was printed.
+    private static boolean printResultSet(ResultSet rs, String header)
+            throws SQLException {
 
-        String query = "begin school_pkg.show_students; end;";
+        ResultSetMetaData meta = rs.getMetaData();
+        int columnCount = meta.getColumnCount();
+        boolean foundRows = false;
 
-        try (CallableStatement cs = conn.prepareCall(query)) {
-            cs.execute();
+        if (header != null) System.out.println(header);
+
+        // column headers
+        for (int i = 1; i <= columnCount; i++) {
+            System.out.print(meta.getColumnName(i));
+            if (i < columnCount) System.out.print("\t");
         }
+        System.out.println();
+
+        // rows
+        while (rs.next()) {
+            foundRows = true;
+            for (int i = 1; i <= columnCount; i++) {
+                System.out.print(rs.getString(i));
+                if (i < columnCount) System.out.print("\t");
+            }
+            System.out.println();
+        }
+
+        return foundRows;
     }
 
-    public void showStudents() throws SQLException {
-        
-        String query = "begin ? := school_pkg.get_students; end;";
-        
+    // Call a zero-argument function that returns a ref cursor, print it.
+    private void showAll(String functionName, String header)
+            throws SQLException {
+
+        String query = "begin ? := school_pkg." + functionName + "; end;";
+
         try (CallableStatement cs = conn.prepareCall(query)) {
             cs.registerOutParameter(1, OracleTypes.CURSOR);
             cs.execute();
-            
+
             try (ResultSet rs = (ResultSet) cs.getObject(1)) {
-                // same print loop as getCoursePrerequisites
+                boolean found = printResultSet(rs, header);
+                if (!found) System.out.println("No rows found.");
             }
         }
     }
 
+    // -----------------------------------------
+    // Public methods
+    // -----------------------------------------
+
+    public void showStudents() throws SQLException {
+        showAll("show_students", "\n--- STUDENTS ---");
+    }
+
+    public void showCourses() throws SQLException {
+        showAll("show_courses", "\n--- COURSES ---");
+    }
+
+    public void showCourseCredit() throws SQLException {
+        showAll("show_course_credit", "\n--- COURSE CREDIT ---");
+    }
+
+    public void showClasses() throws SQLException {
+        showAll("show_classes", "\n--- CLASSES ---");
+    }
+
+    public void showGEnrollments() throws SQLException {
+        showAll("show_g_enrollments", "\n--- G_ENROLLMENTS ---");
+    }
+
+    public void showScoreGrade() throws SQLException {
+        showAll("show_score_grade", "\n--- SCORE_GRADE ---");
+    }
+
+    public void showPrerequisites() throws SQLException {
+        showAll("show_prerequisites", "\n--- PREREQUISITES ---");
+    }
+
+    public void showLogs() throws SQLException {
+        showAll("show_logs", "\n--- LOGS ---");
+    }
+
+    public void showTableNames() throws SQLException {
+        showAll("get_table_names", "\n--- TABLES ---");
+    }
+
     public void showStudentsInClass(String classId) throws SQLException {
 
-        String query = "begin school_pkg.show_class_students(?); end;";
+        String query = "begin ? := school_pkg.show_class_students(?); end;";
 
         try (CallableStatement cs = conn.prepareCall(query)) {
-            cs.setString(1, classId);
+            cs.registerOutParameter(1, OracleTypes.CURSOR);
+            cs.setString(2, classId);
             cs.execute();
+
+            try (ResultSet rs = (ResultSet) cs.getObject(1)) {
+                boolean found = printResultSet(
+                    rs, "\n--- STUDENTS IN CLASS " + classId + " ---");
+                if (!found) System.out.println("No students found.");
+            }
         }
     }
 
@@ -64,24 +136,9 @@ public class SchoolService {
             cs.execute();
 
             try (ResultSet rs = (ResultSet) cs.getObject(3)) {
-
-                System.out.println("\n--- PREREQUISITES FOR "
-                                   + dept + " " + courseNum + " ---");
-
-                ResultSetMetaData meta = rs.getMetaData();
-                int columnCount = meta.getColumnCount();
-                boolean foundRows = false;
-
-                while (rs.next()) {
-                    foundRows = true;
-                    for (int i = 1; i <= columnCount; i++) {
-                        System.out.print(rs.getString(i));
-                        if (i < columnCount) System.out.print("\t");
-                    }
-                    System.out.println();
-                }
-
-                if (!foundRows) System.out.println("No prerequisites found.");
+                boolean found = printResultSet(
+                    rs, "\n--- PREREQUISITES FOR " + dept + " " + courseNum + " ---");
+                if (!found) System.out.println("No prerequisites found.");
             }
         }
     }
@@ -89,7 +146,6 @@ public class SchoolService {
     public void enrollGraduate(String bNum, String classId)
             throws SQLException {
 
-        // enroll_graduate is a void procedure: two IN parameters, no OUT.
         String query = "begin school_pkg.enroll_graduate(?, ?); end;";
 
         try (CallableStatement cs = conn.prepareCall(query)) {
@@ -125,6 +181,8 @@ public class SchoolService {
         if (conn != null && !conn.isClosed()) {
             conn.close();
         }
+        
+        System.out.println("Database connection closed.");
     }
 
 } // End class
